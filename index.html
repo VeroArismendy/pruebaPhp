@@ -1,0 +1,299 @@
+﻿<html>
+<head>
+<style type="text/css">
+
+	body {
+		width: 97%;
+		height: 97%;		
+	}
+	
+	.accordion {
+		background-color: #eee;
+		color: #444;
+		cursor: pointer;
+		padding: 18px;
+		width: 100%;
+		border: none;
+		text-align: left;
+		outline: none;
+		font-size: 15px;
+		transition: 0.4s;
+	}
+
+	.active, .accordion:hover {
+		background-color: #ccc; 
+	}
+
+	.panel {
+		padding: 0 18px;
+		display: none;
+		background-color: white;
+	}
+
+	.buttonRight{
+		float: right;
+	}
+	
+	.modal-header, h4, .close {
+		background-color: #004b8e; /*#5cb85c;*/
+		color:white !important;
+		text-align: center;
+		font-size: 24px;
+		  
+	}
+	
+	.modal-footer {
+		background-color: #f9f9f9;
+	}
+	
+	.required {
+		color: red
+	}
+	
+	.modal-body {
+		max-height: calc(100vh - 210px);
+		overflow-y: auto;
+		background-color: InactiveBorder
+	}
+</style>
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+ 
+ 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
+
+<script>
+	$(document).ready(function(){
+			 
+		$( document ).on( "click", "#acceptTest", function() {				
+			var numCases = 	$("#numTestCases").val();
+			
+			$("#initialValues").empty();
+			
+			if(numCases <= 50){
+				
+				//Por cada número de casos se piden dos números
+				var string = "";
+				
+				for (x=1;x<=numCases;x++) { 
+					string += '<button class="accordion">Test case '  + x + ' </button>';
+					string += '<div class="panel">';
+					string += getContentTestCase(x);
+					string += '</div>';		
+				}
+
+				$("#initialValues").css("display", "block");
+				$('#initialValues').append(string);		
+				setAccordeon();			
+			} else {
+				$("#initialValues").css("display", "none");
+				$("#operations").css("display", "none");
+				
+				alert("El número máximo de casos de prueba es 50");
+			}				
+			
+		});	
+		
+		
+		$( document ).on( "click", ".createMatrix", function() {	
+			
+			var infoId = this.id.split("_");
+			var id = infoId[1];
+			var cant = $("#numberOperations_"+id).val();
+			
+			var string = getStringOperations(id, cant);
+			
+			$("#divContentOperations_"+id).html(string);
+		
+		});
+			
+		//This option is used when the user select the type of operation for doing and show the div that correspond
+		$( document ).on( "change", ".selOperator", function() {	
+			var infoId = this.id.split("_");
+			var idOperations = infoId[1] + '_' + infoId[2] ;
+			var typeOperation = $("input[name=operation_"+idOperations+"]:checked").val();
+						
+			if(typeOperation === "update"){
+				$("#divUpdateValues_"+idOperations).css("display", "block");
+				$("#divSumValues_"+idOperations).css("display", "none");
+			}else{
+				$("#divSumValues_"+idOperations).css("display", "block");
+				$("#divUpdateValues_"+idOperations).css("display", "none");
+			}
+		});
+				
+		//This option is called when the user use the button "Execute Operations"
+		$( document ).on( "click", ".executeAll_", function() {	
+			var infoId = this.id.split("_");
+			var id = infoId[1];
+			
+			executeOperations(id);				
+		});
+		
+		
+		//This option is for validating the dataType of the integer fields
+		$( document ).on( "blur", ".intNumber", function() {	
+		
+			isInteger = validateInteger($(this).val());
+			
+			if(isInteger === false){
+				$(this).val("");
+				alert("This field only allows numbers ");
+			}
+		});	
+	});
+	
+	//This function validate if a number given is an integer
+	function validateInteger(number){
+		if (isNaN(number)){
+			return false;
+		} else {
+			if (number % 1 == 0) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+
+	//this function is for using the accordeon style 
+	function setAccordeon(){
+		var acc = document.getElementsByClassName("accordion");
+		var i;
+
+		for (i = 0; i < acc.length; i++) {
+			acc[i].addEventListener("click", function() {
+				this.classList.toggle("active");
+				var panel = this.nextElementSibling;
+				if (panel.style.display === "block") {
+					panel.style.display = "none";
+				} else {
+					panel.style.display = "block";
+				}
+			});
+		}
+	}
+	
+	//This function return the html content for each test case 
+	function getContentTestCase(idTest){
+		stringContent = '';
+		stringContent += '<br>';
+		stringContent += '<span class="required">*</span> Number that define the matrix <input type="text" class="intNumber" id="numberMatrix_'+idTest+'" > &nbsp; &nbsp;';
+		stringContent += '<span class="required">*</span> Number of operations to do it <input type="text" class="intNumber" id="numberOperations_'+idTest+'" > &nbsp; &nbsp;';
+		stringContent += '<input type="button" class="createMatrix" id="createMatrix_'+idTest+'" value="Accept">';
+		stringContent += '<div class="buttonRight"> <input type="button" class="btn btn-success executeAll_" id="executeAll_'+idTest+'" value="Execute operations"> </div>';
+		stringContent += '<br><br>';
+		stringContent += '<div id="divContentOperations_'+idTest+'" ></div>';
+		stringContent += "<br><br>";
+		return stringContent;
+	}
+	
+	//This function return the string with the html content for the Div divContentOperations_
+	function getStringOperations(id, cantOperations){
+	
+		stringContent = '';
+		stringContent += '<form id="form_'+id+'">';
+		
+		//This for create the html for each operation, the total is based on the number given for the user 
+		for (x=1;x<=cantOperations;x++) { 	
+			stringContent += '<div id="operations">';
+			
+			stringContent += '<p>Check the type for operation ' +  x + '</p>';					
+			stringContent += '<input type="radio" class="selOperator" name="operation_'+id+'_'+x+'" id="operation_'+id+'_'+x+'" value="update"> Update &nbsp; &nbsp;';
+			stringContent += '<input type="radio" class="selOperator" name="operation_'+id+'_'+x+'" id="operation_'+id+'_'+x+'" value="query"> Query';				
+			stringContent += '<div id="divUpdateValues_'+id+'_'+x+'" style="display:none">';
+			stringContent += '	<span class="required">*</span> Value of X, Y, Z <input type"text" class="intNumber" name="valuePosition_'+id+'_'+x+'" size="5">  &nbsp; &nbsp;';
+		
+			stringContent += '	<span class="required">*</span> New value  <input type"text" class="intNumber" name="newValuePosition_'+id+'_'+x+'" size="5"> ';	
+			stringContent += '</div>';
+			
+			stringContent += '<div id="divSumValues_'+id+'_'+x+'" style="display:none">';
+			stringContent += '  <span class="required">*</span> Value of X1, Y1, Z1 <input class="intNumber" name="valueFrom_'+id+'_'+x+'" type"text" size="5"> &nbsp;&nbsp;&nbsp;';
+	
+			stringContent += '  <span class="required">*</span> Value of Xn, Yn, Zn <input class="intNumber" name="valueTo_'+id+'_'+x+'" type"text" size="5"> &nbsp;';			
+			stringContent += '</div>';			
+			stringContent += '</div>';
+			stringContent += '<hr>';
+		}
+		stringContent += '</form>';		
+		
+		return stringContent;
+	}
+	
+	//this function is for sending the information to the php file and waiting for the server answer
+	function executeOperations(id){
+	
+		var form 	   = $("#form_"+id).serialize();
+		var totalOpr   = $("#numberOperations_"+id).val();
+		var numMatriz  = $("#numberMatrix_"+id).val();
+		
+		
+		$.ajax({
+		  method: "POST",
+		  url: "prueba_php.php",
+		  data: { consultaAjax: "on", form: form, totalOperations: totalOpr , numMatriz: numMatriz, id: id}
+		})
+		.done(function( response ) {
+		
+			var objResponse = $.parseJSON(response);			
+			
+			if(objResponse.error === true){
+				alert(objResponse.message);						
+			}else{
+				var string = '<div><p>Inputs</p>';
+				string += objResponse.operations;
+				string += '</div>';
+				string += '</br></br>';
+				
+				string += '<div><p>Outputs</p>';
+				string += objResponse.resultsOp;
+				string += '</div>';
+				
+				$("#bodyModal").html(string)
+				$("#modalResult").modal();
+			}				
+		});		
+	}
+	
+</script>
+
+</head>
+
+
+<body>
+
+	<!-- Div first part -->
+	<div id="firstPart" style="padding-top:2%">
+		Enter the number of test cases 
+		<input type="text" class="intNumber" id="numTestCases" size="8">
+		<input type="button" id="acceptTest" value="Send">
+	</div>
+
+	<br>
+	
+	<!-- Div getting initial input parameters-->
+	<div id="initialValues" style="display:none">
+			
+	</div>
+	
+	<div class="modal fade" id="modalResult" role="dialog">
+		<div class="modal-dialog modal-lg ">
+			<div class="modal-content">
+				<div class="modal-header">				 
+				  <h4>Operations Results</h4>
+				</div>
+				<div class="modal-body" style="padding:10px 40px;" id="bodyModal">
+					
+				</div>
+				<div class="modal-footer">					
+					<button type="submit" class="btn btn-danger btn-default pull-right" data-dismiss="modal">Cerrar</button>
+				</div>
+			</div>      
+		</div>
+	</div> 
+	
+</body>
+
+</html>
